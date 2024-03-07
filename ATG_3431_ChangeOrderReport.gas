@@ -1,0 +1,226 @@
+Program.Sub.ScreenSU.Start
+gui.F_ChangeOrder..create
+gui.F_ChangeOrder..caption("Change Order")
+gui.F_ChangeOrder..size(9600,5160)
+gui.F_ChangeOrder..position(0,0)
+gui.F_ChangeOrder..event(unload,f_changeorder_unload)
+gui.F_ChangeOrder..alwaysontop(False)
+gui.F_ChangeOrder..fontname("Arial")
+gui.F_ChangeOrder..fontsize(8)
+gui.F_ChangeOrder..forecolor(0)
+gui.F_ChangeOrder..fontstyle(,,,,)
+gui.F_ChangeOrder..BackColor(-2147483633)
+gui.F_ChangeOrder..controlbox(True)
+gui.F_ChangeOrder..maxbutton(True)
+gui.F_ChangeOrder..minbutton(True)
+gui.F_ChangeOrder..mousepointer(0)
+gui.F_ChangeOrder..moveable(True)
+gui.F_ChangeOrder..sizeable(False)
+gui.F_ChangeOrder..ShowInTaskBar(True)
+gui.F_ChangeOrder..titlebar(True)
+gui.F_ChangeOrder.txtNotes.create(textboxm)
+gui.F_ChangeOrder.txtNotes.text("")
+gui.F_ChangeOrder.txtNotes.visible(True)
+gui.F_ChangeOrder.txtNotes.size(8940,3870)
+gui.F_ChangeOrder.txtNotes.zorder(0)
+gui.F_ChangeOrder.txtNotes.position(200,200)
+gui.F_ChangeOrder.txtNotes.enabled(True)
+gui.F_ChangeOrder.txtNotes.alignment(0)
+gui.F_ChangeOrder.txtNotes.fontname("Arial")
+gui.F_ChangeOrder.txtNotes.fontsize(8)
+gui.F_ChangeOrder.txtNotes.BackColor(-2147483643)
+gui.F_ChangeOrder.cmdSave.create(button)
+gui.F_ChangeOrder.cmdSave.caption("Save")
+gui.F_ChangeOrder.cmdSave.visible(True)
+gui.F_ChangeOrder.cmdSave.size(855,375)
+gui.F_ChangeOrder.cmdSave.zorder(0)
+gui.F_ChangeOrder.cmdSave.position(200,4200)
+gui.F_ChangeOrder.cmdSave.enabled(True)
+gui.F_ChangeOrder.cmdSave.fontname("Arial")
+gui.F_ChangeOrder.cmdSave.fontsize(8)
+gui.F_ChangeOrder.cmdSave.event(click,cmdsave_click)
+gui.F_ChangeOrder.cmdPrint.create(button)
+gui.F_ChangeOrder.cmdPrint.caption("Print")
+gui.F_ChangeOrder.cmdPrint.visible(True)
+gui.F_ChangeOrder.cmdPrint.size(855,375)
+gui.F_ChangeOrder.cmdPrint.zorder(0)
+gui.F_ChangeOrder.cmdPrint.position(1200,4200)
+gui.F_ChangeOrder.cmdPrint.enabled(True)
+gui.F_ChangeOrder.cmdPrint.fontname("Arial")
+gui.F_ChangeOrder.cmdPrint.fontsize(8)
+gui.F_ChangeOrder.cmdPrint.event(click,Print)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.Global.sOrder.Declare(String)
+Variable.Global.sLine.Declare(String)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+V.Local.iRowCount.Declare(Long)
+V.Local.iColCount.Declare(Long)
+V.Local.iRows.Declare(Long)
+V.Local.iCount.Declare(Long)
+V.Local.iRow.Declare(Long)
+V.Local.iCol.Declare(Long)
+V.Local.sRowData.Declare(String)
+V.Local.sValue.Declare(String)
+V.Local.iARow.Declare(Long)
+V.Local.sColData.Declare(String)
+'Coded by: ANS
+'Project Start Date: 3/27/2011
+
+'Screen-Tech: Print Order Notes from Script Button on OE Line
+'Hook 12410, 12010
+'Added for Screen-Tech on 2/10/2013 by ENM
+'Print Order Notes from Script Button on OE > View  >Order & History
+'Hook 33001, 33002
+
+'Order
+F.Intrinsic.Control.If(V.Caller.Hook,=,12010)
+	V.Passed.000162.Set("Change Order")
+	F.Intrinsic.Control.End
+'History
+F.Intrinsic.Control.ElseIf(V.Caller.Hook,=,33001)
+	V.Passed.000153.Set("Order Notes")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+F.Intrinsic.Debug.InvokeDebugger
+F.Intrinsic.Debug.Stop
+
+'F.Intrinsic.Debug.InvokeDebugger
+'F.Intrinsic.Debug.Stop
+F.Intrinsic.Control.If(V.Caller.Hook,=,12410)
+	F.Intrinsic.String.LPad(V.Passed.000060,"0",7,V.Global.sOrder)
+	F.Intrinsic.String.lpad(V.Passed.000051,"0",3,V.Global.sLine)
+	F.Intrinsic.String.Concat(V.Global.sLine,"0",V.Global.sLine)
+F.Intrinsic.Control.ElseIf(V.Caller.Hook,=,33002)
+	F.Intrinsic.String.LPad(V.Passed.000002,"0",7,V.Global.sOrder)
+	F.Intrinsic.BDF.Load("Hist","AUX001")
+	F.Intrinsic.Math.Sub(V.Passed.GRID-ORDER-ROW-SEL,1,V.Local.iRow)
+	F.Intrinsic.BDF.ReadRow("Hist",V.Local.iRow,V.Local.sRowData)
+	F.Intrinsic.String.Split(V.Local.sRowData,"|~|",V.Local.sRowData)
+	F.Intrinsic.String.lpad(V.Local.sRowData(0),"0",3,V.Global.sLine)
+	F.Intrinsic.String.Concat(V.Global.sLine,"0",V.Global.sLine)
+
+F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.CallSub("Load")
+Gui.f_ChangeOrder..show
+
+
+
+Program.Sub.Main.End
+
+Program.Sub.Print.Start
+V.Local.sSQL.Declare(String)
+V.Local.sText.Declare(String)
+V.Local.sOutput.Declare(String)
+V.Local.sDate.declare(String)
+V.Local.sCust.Declare(String)
+V.Local.sPO.Declare(String)
+V.Local.sOrder.Declare(String)
+V.Local.sLine.Declare(String)
+V.Local.sTextArr.Declare(String)
+V.Local.i.Declare(Long)
+
+F.Intrinsic.Printer.SelectPrinterDialog
+
+'F.Intrinsic.Debug.Stop
+F.Intrinsic.String.concat("Select Customer, Customer_PO from V_Order_Header where Order_No='",V.Global.sOrder,"'",V.Local.sSQL)
+F.ODBC.Connection!con.OpenRecordsetRO("rst",V.Local.sSQL)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	F.Intrinsic.String.Concat("Select Name_Customer from Customer_Master where Customer='",V.ODBC.con!rst.FieldVal!Customer,"' and Rec='1'",V.Local.sSQL)
+	F.ODBC.Connection!con.OpenRecordsetRO("rstC",V.Local.sSQL)
+	F.Intrinsic.Control.If(V.ODBC.con!rstC.EOF,=,False)
+		V.Local.sCust.Set(V.ODBC.con!rstC.FieldVal!Name_Customer)
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstC.close
+	V.Local.sPO.Set(V.ODBC.con!rst.FieldVal!Customer_PO)
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.Close
+
+F.Intrinsic.string.Concat("Select Notes from ATG_CHG_ORDER_NOTES where OrderNo='",V.Global.sOrder,"' and Line='",V.Global.sLine,"'",V.Local.sSQL)
+F.ODBC.Connection!con.OpenRecordsetRW("rst",V.Local.sSQL)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	V.Local.sText.set(V.ODBC.con!rst.FieldVal!notes)
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.close
+
+'F.Intrinsic.String.DateString(V.Ambient.Date,V.Local.sDate)
+F.Intrinsic.String.Format(V.ambient.Date,"mm/dd/yyyy",V.Local.sDate)
+F.Intrinsic.String.Concat("DATE: ",V.Local.sDate,V.Local.sDate)
+F.Intrinsic.String.Concat("CUSTOMER: ",V.Local.sCust,V.Local.sCust)
+F.Intrinsic.String.Concat("PO: ",V.Local.sPO,V.Local.sPO)
+F.Intrinsic.String.Concat("S/O #: ",V.Passed.000060,V.Global.sOrder)
+F.Intrinsic.String.Concat("Line #: ",V.Passed.000051,V.Global.sLine)
+
+F.Intrinsic.Printer.PrintRet("")
+F.Intrinsic.Printer.PrintRet("")
+F.Intrinsic.Printer.position(5500,)
+F.Intrinsic.Printer.PrintNRet("CHANGE ORDER")
+F.Intrinsic.Printer.Position(10500,)
+F.Intrinsic.Printer.PrintRet(V.Local.sDate)
+F.Intrinsic.Printer.PrintRet("")
+F.Intrinsic.Printer.Position(500,)
+F.Intrinsic.Printer.PrintNRet(V.Local.sCust)
+F.Intrinsic.Printer.Position(10500,)
+F.Intrinsic.Printer.PrintRet(V.Local.sPO)
+F.Intrinsic.Printer.Position(10500,)
+F.Intrinsic.Printer.PrintRet(V.Global.sOrder)
+F.Intrinsic.Printer.Position(10500,)
+F.Intrinsic.Printer.PrintRet(V.Global.sLine)
+F.Intrinsic.Printer.PrintRet("")
+F.Intrinsic.Printer.PrintRet("")
+F.Intrinsic.String.LimitSplit(V.Local.sText,160,V.Local.sTextArr)
+F.Intrinsic.Control.For(V.Local.i,0,V.Local.sTextArr.UBound,1)
+	F.Intrinsic.Printer.Position(400,)
+	F.Intrinsic.Printer.PrintRet(V.Local.sTextArr(v.Local.i))
+F.Intrinsic.Control.Next(V.Local.i)
+F.Intrinsic.Printer.Finished
+
+
+Program.Sub.Print.End
+
+program.sub.cmdsave_click.start
+V.Local.sSQL.Declare(String)
+
+F.Intrinsic.string.Concat("Select * from ATG_CHG_ORDER_NOTES where OrderNo='",V.Global.sOrder,"' and Line='",V.Global.sLine,"'",V.Local.sSQL)
+F.ODBC.Connection!con.OpenRecordsetRW("rst",V.Local.sSQL)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,True)
+	F.ODBC.con!rst.AddNew
+	F.ODBC.con!rst.Set!OrderNo(V.Global.sOrder)
+	F.ODBC.con!rst.Set!line(V.Global.sLine)
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.Set!Notes(V.Screen.F_ChangeOrder!txtNotes.Text)
+f.ODBC.con!rst.Update
+F.ODBC.con!rst.close
+
+
+program.sub.cmdsave_click.end
+
+program.sub.f_changeorder_unload.start
+F.Intrinsic.Control.If(V.ODBC.con.State,=,1)
+	F.ODBC.Connection!con.Close
+F.Intrinsic.Control.EndIf
+f.Intrinsic.Control.end
+
+program.sub.f_changeorder_unload.end
+
+Program.Sub.Load.Start
+V.Local.sSQL.Declare(String)
+
+F.Intrinsic.string.Concat("Select Notes from ATG_CHG_ORDER_NOTES where OrderNo='",V.Global.sOrder,"' and Line='",V.Global.sLine,"'",V.Local.sSQL)
+F.ODBC.Connection!con.OpenRecordsetRW("rst",V.Local.sSQL)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,False)
+	Gui.F_ChangeOrder.txtNotes.Text(V.ODBC.con!rst.FieldVal!notes)
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.close
+
+Program.Sub.Load.End
+
+
